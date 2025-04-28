@@ -85,11 +85,11 @@ class PlaneTask(BaseEnv):
             if self.is_state_valid(state):
                 return state
 
-    def visualize(self, traj: np.ndarray, tree: list[np.ndarray], filename: str = "") -> None:
+    def visualize(self, traj: np.ndarray, trees: list[list[np.ndarray]], filename: str = "") -> None:
         """
-        Animate the growing tree and the execution of the trajectory.
+        Animate the growing trees and the execution of the trajectory.
         traj: shape (T,2)
-        tree: list of length T; tree[i].shape = (Ni,2)
+        trees: list of length N; trees[j][i].shape = (Ni,2)
         """
         fig, ax = plt.subplots()
         ax.set_aspect("equal", "box")
@@ -123,28 +123,27 @@ class PlaneTask(BaseEnv):
                 ax.add_patch(Circle((x0, y0), r, color="k", alpha=0.4))
                 ax.add_patch(Circle((x1, y1), r, color="k", alpha=0.4))
 
-        # artists for tree, trajectory line, and current point
-        (tree_line,) = ax.plot([], [], color="gray", lw=1)
+        T = len(traj)
+        N = len(trees)
+        # one line per tree
+        tree_lines = [ax.plot([], [], color="gray", lw=1)[0] for _ in range(N)]
         (traj_line,) = ax.plot([], [], color="blue", lw=2)
         (traj_point,) = ax.plot([], [], "ro", ms=5)
 
-        T = min(len(traj), len(tree))
-
         def init():
-            tree_line.set_data([], [])
+            for ln in tree_lines:
+                ln.set_data([], [])
             traj_line.set_data([], [])
             traj_point.set_data([], [])
-            return tree_line, traj_line, traj_point
+            return tree_lines + [traj_line, traj_point]
 
         def update(i):
-            pts = tree[i]
-            # connect tree points in order
-            tree_line.set_data(pts[:, 0], pts[:, 1])
-            # plot trajectory up to step i
+            for j, tr in enumerate(trees):
+                pts = tr[i]
+                tree_lines[j].set_data(pts[:, 0], pts[:, 1])
             traj_line.set_data(traj[: i + 1, 0], traj[: i + 1, 1])
-            # current position
             traj_point.set_data([traj[i, 0]], [traj[i, 1]])
-            return tree_line, traj_line, traj_point
+            return tree_lines + [traj_line, traj_point]
 
         anim = FuncAnimation(
             fig,
