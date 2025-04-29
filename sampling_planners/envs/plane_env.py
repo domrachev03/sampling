@@ -158,7 +158,7 @@ class PlaneEnv(BaseEnv):
         # no dynamic trajectory; only animate tree growth
 
         # replace line plot of nodes with scatter
-        tree_scatter = ax.scatter([], [], color="gray", s=10)
+        tree_scatter = ax.scatter([], [], color="gray", s=2)
 
         edge_lines: list = []
         highlight_lines: list = []

@@ -19,7 +19,7 @@ def run_2d():
     env = PlaneEnv(x_lim, y_lim, obs_types, obs_data, min_obstacle_distance=0.1)
 
     start, goal = env.draw_random_state(), env.draw_random_state()
-    planner = PrimitiveTreePlanner(start, goal, env, sol_threshold=0.2, extend_state=0.1)
+    planner = PrimitiveTreePlanner(start, goal, env, sol_threshold=0.2, extend_state=0.05)
     N_iter = 100
     for _ in range(N_iter):
         planner.step()

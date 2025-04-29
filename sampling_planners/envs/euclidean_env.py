@@ -197,7 +197,7 @@ class EuclideanEnv(BaseEnv):
 
         T = len(tree_nodes)
         # create empty scatter instead of line
-        tree_scatter = ax.scatter([], [], [], color="gray", s=10)
+        tree_scatter = ax.scatter([], [], [], color="gray", s=2)
         edge_lines: list = []
         highlight_lines: list = []
         # static start/end markers
