@@ -233,16 +233,14 @@ class EuclideanEnv(BaseEnv):
             # draw all edges at iteration i
             for u, v in tree_edges[i]:
                 segment = nodes_i[[u, v], :]
-                print(segment)
                 ln = ax.plot(segment[:, 0], segment[:, 1], segment[:, 2], color="gray", lw=1)[0]
                 edge_lines.append(ln)
             # optional highlight
-            if highlighted_path and highlighted_path[i]:
+            if highlighted_path is not None and highlighted_path[i] is not None:
                 for u, v in highlighted_path[i]:
                     segment = nodes_i[[u, v], :]
                     hl = ax.plot(segment[:, 0], segment[:, 1], segment[:, 2], color="red", lw=2)[0]
                     highlight_lines.append(hl)
-            print("-" * 50)
             # update traj
             traj_line.set_data(traj[: i + 1, 0], traj[: i + 1, 1])
             traj_line.set_3d_properties(traj[: i + 1, 2])

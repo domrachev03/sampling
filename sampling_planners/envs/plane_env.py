@@ -17,7 +17,7 @@ class PlaneObstacleShapes(Enum):
 
 
 # class PlaneTask(BaseEnv):
-class PlaneTask(BaseEnv):
+class PlaneEnv(BaseEnv):
     def __init__(
         self,
         x_lim: tuple[float, float],
@@ -155,33 +155,34 @@ class PlaneTask(BaseEnv):
                 ax.add_patch(Circle((x1, y1), r, color="k", alpha=0.4))
 
         T = len(tree_nodes)
-        traj = np.linspace(start, goal, T)
+        # no dynamic trajectory; only animate tree growth
 
-        tree_line = ax.plot([], [], "ro", color="gray", lw=1)[0]
+        # replace line plot of nodes with scatter
+        tree_scatter = ax.scatter([], [], color="gray", s=10)
+
         edge_lines: list = []
         highlight_lines: list = []
-        (traj_line,) = ax.plot([], [], color="blue", lw=2)
-        (traj_point,) = ax.plot([], [], "ro", ms=5)
+        # static start/end markers
+        ax.scatter(start[0], start[1], marker="*", color="green", s=100)
+        ax.scatter(goal[0], goal[1], marker="X", color="red", s=100)
 
         def init():
-            tree_line.set_data([], [])
+            tree_scatter.set_offsets(np.empty((0, 2)))
             for ln in edge_lines + highlight_lines:
                 ln.remove()
             edge_lines.clear()
             highlight_lines.clear()
-            traj_line.set_data([], [])
-            traj_point.set_data([], [])
-            return [tree_line, traj_line, traj_point]
+            return [tree_scatter]
 
         def update(i):
             # build prefix of nodes
             nodes_i = np.vstack(tree_nodes[: i + 1])
-            tree_line.set_data(nodes_i[:, 0], nodes_i[:, 1])
+            tree_scatter.set_offsets(nodes_i)
 
             # clear old edges/highlights
-            for ln in edge_lines + highlight_lines:
+            for ln in highlight_lines:
                 ln.remove()
-            edge_lines.clear()
+            # edge_lines.clear()
             highlight_lines.clear()
 
             # draw edges
@@ -190,17 +191,13 @@ class PlaneTask(BaseEnv):
                 ln = ax.plot(segment[:, 0], segment[:, 1], color="gray", lw=1)[0]
                 edge_lines.append(ln)
             # optional highlight
-            if highlighted_path and highlighted_path[i]:
+            if highlighted_path is not None and highlighted_path[i] is not None:
                 for u, v in highlighted_path[i]:
                     segment = nodes_i[[u, v], :]
                     hl = ax.plot(segment[:, 0], segment[:, 1], color="red", lw=2)[0]
                     highlight_lines.append(hl)
 
-            # update trajectory
-            traj_line.set_data(traj[: i + 1, 0], traj[: i + 1, 1])
-            traj_point.set_data([traj[i, 0]], [traj[i, 1]])
-
-            return [tree_line, traj_line, traj_point] + edge_lines + highlight_lines
+            return [tree_scatter] + edge_lines + highlight_lines
 
         anim = FuncAnimation(fig, update, frames=T, init_func=init, blit=True, interval=100)
         if filename:

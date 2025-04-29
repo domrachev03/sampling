@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sampling_planners.envs.plane_env import PlaneTask, PlaneObstacleShapes
+from sampling_planners.envs.plane_env import PlaneEnv, PlaneObstacleShapes
 
 # 1) define workspace limits
 x_lim = (0.0, 10.0)
@@ -19,7 +19,7 @@ obstacles_data = [
 ]
 
 # 3) construct environment
-env = PlaneTask(x_lim, y_lim, obstacles_type=obstacles_type, obstacles_data=obstacles_data, min_obstacle_distance=0.1)
+env = PlaneEnv(x_lim, y_lim, obstacles_type=obstacles_type, obstacles_data=obstacles_data, min_obstacle_distance=0.1)
 
 # 4) test API
 start = env.draw_random_state()
@@ -34,7 +34,7 @@ traj = np.linspace(start, goal, T)
 
 # 6) build one growing tree
 tree_nodes = [[env.draw_random_state()] for _ in range(T)]
-tree_edges = [[(0, i)] for i in range(T)]
+tree_edges = [[(0, 1)]] + [[(0, i), (1, i)] for i in range(T)]
 
 # 7) visualize single tree
 env.visualize(start, goal, tree_nodes, tree_edges)
