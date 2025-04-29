@@ -25,7 +25,7 @@ class PrimitiveTreePlanner(BaseTreePlanner):
             # Step 2.1. Choose the nearest node in the tree
             init_node = self.nearest_node(self.goal)
         else:
-            init_node = np.random.randint(0, len(self.tree_nodes))
+            init_node = np.random.randint(0, self.n_nodes)
         random_state = self.tree_nodes[init_node]
 
         # Step 3. Select a new random environment collision-free state

@@ -7,9 +7,10 @@ from sampling_planners.envs.euclidean_env import EuclideanEnv, EuclidObstacleSha
 from sampling_planners.envs.plane_env import PlaneObstacleShapes, PlaneEnv
 from sampling_planners.planners.primitive_planner import PrimitiveTreePlanner
 from sampling_planners.planners.rrt_planner import RRTPlanner
+from sampling_planners.planners.rrt_star_planner import RrtStarPlanner
 
 
-def run_2d(choose_nearest: bool = False, planner_type: str = "primitive"):
+def run_2d(choose_nearest: bool = False, planner_type: str = "primitive", sigma: float = 1.0):
     x_lim, y_lim = (0, 10), (0, 5)
     obs_types = [PlaneObstacleShapes.CIRCLE, PlaneObstacleShapes.BOX]
     obs_data = [
@@ -22,12 +23,14 @@ def run_2d(choose_nearest: bool = False, planner_type: str = "primitive"):
     print(choose_nearest)
 
     # select planner
-    if planner_type == "rrt":
-        planner = RRTPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.05)
-    else:
+    if planner_type == "primitive":
         planner = PrimitiveTreePlanner(
-            start, goal, env, sol_threshold=0.2, extend_step=0.05, choose_nearest=choose_nearest
+            start, goal, env, sol_threshold=0.2, extend_step=0.2, choose_nearest=choose_nearest
         )
+    elif planner_type == "rrt":
+        planner = RRTPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.2)
+    else:  # rrt_star
+        planner = RrtStarPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.2, sigma=sigma)
 
     N_iter = 100
     for _ in range(N_iter):
@@ -38,7 +41,7 @@ def run_2d(choose_nearest: bool = False, planner_type: str = "primitive"):
     planner.visualize()
 
 
-def run_3d(choose_nearest: bool = False, planner_type: str = "primitive"):
+def run_3d(choose_nearest: bool = False, planner_type: str = "primitive", sigma: float = 1.0):
     x_lim, y_lim, z_lim = (0, 3), (0, 3), (0, 3)
     obs_types = [EuclidObstacleShapes.SPHERE, EuclidObstacleShapes.BOX]
     obs_data = [
@@ -58,12 +61,14 @@ def run_3d(choose_nearest: bool = False, planner_type: str = "primitive"):
     print(choose_nearest)
 
     # select planner
-    if planner_type == "rrt":
-        planner = RRTPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.2)
-    else:
+    if planner_type == "primitive":
         planner = PrimitiveTreePlanner(
-            start, goal, env, sol_threshold=0.2, extend_step=0.2, choose_nearest=choose_nearest
+            start, goal, env, sol_threshold=0.2, extend_step=0.1, choose_nearest=choose_nearest
         )
+    elif planner_type == "rrt":
+        planner = RRTPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.1)
+    else:
+        planner = RrtStarPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.1, sigma=sigma)
 
     N_iter = 500
     for _ in range(N_iter):
@@ -75,12 +80,31 @@ def run_3d(choose_nearest: bool = False, planner_type: str = "primitive"):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dim", choices=["2d", "3d"], default="3d")
-    parser.add_argument("--planner", choices=["primitive", "rrt"], default="rrt")
+    parser.add_argument("--dim", choices=["2d", "3d"], default="2d")
+    parser.add_argument(
+        "--planner",
+        choices=["primitive", "rrt", "rrt_star"],
+        default="rrt_star",
+        help="Which planner to run",
+    )
     parser.add_argument("--choose-nearest", action="store_true", default=True)
+    parser.add_argument(
+        "--sigma",
+        type=float,
+        default=1.0,
+        help="Rewiring radius σ for RRT*",
+    )
     args = parser.parse_args()
 
     if args.dim == "2d":
-        run_2d(choose_nearest=args.choose_nearest, planner_type=args.planner)
+        run_2d(
+            choose_nearest=args.choose_nearest,
+            planner_type=args.planner,
+            sigma=args.sigma,
+        )
     else:
-        run_3d(choose_nearest=args.choose_nearest, planner_type=args.planner)
+        run_3d(
+            choose_nearest=args.choose_nearest,
+            planner_type=args.planner,
+            sigma=args.sigma,
+        )
