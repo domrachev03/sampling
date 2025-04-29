@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from enum import Enum
 
 import matplotlib as mpl
@@ -85,11 +86,41 @@ class PlaneTask(BaseEnv):
             if self.is_state_valid(state):
                 return state
 
-    def visualize(self, traj: np.ndarray, trees: list[list[np.ndarray]], filename: str = "") -> None:
-        """
-        Animate the growing trees and the execution of the trajectory.
-        traj: shape (T,2)
-        trees: list of length N; trees[j][i].shape = (Ni,2)
+    def visualize(
+        self,
+        start: np.ndarray,
+        goal: np.ndarray,
+        tree_nodes: Sequence[Sequence[np.ndarray]],
+        tree_edges: Sequence[Sequence[tuple[int, int]]],
+        highlighted_path: Sequence[Sequence[tuple[int, int]] | None] | None = None,
+        filename: str = "",
+    ):
+        """Visualize the sampling trees and found trajectory, if any.
+
+        This method creates a visualization of the environment, resulted tree in this trajectory, and
+        the found path, if any.
+
+        Args:
+            start (np.ndarray): starting state of the trajectory.
+
+            goal (np.ndarray): goal state of the trajectory.
+
+            tree_nodes (Sequence[ Sequence[np.ndarray]]): nodes of the tree.
+            Nodes sequence is a Sequence[Sequence[np.ndarray]]. Nodes are only added to the tree,
+            hence each entry in the sequence represents only new nodes added to the tree during one iteration.
+            The overall list of nodes in a tree is prefix sum of all lists in Sequence.
+            Here, node is a point in 2D space.
+
+            tree_edges (Sequence[tuple[int, int]]): edges of the trees.
+            Each edge is a tuple of (node1, node2), and each iteration contains Sequence[tuple[int, int]].
+            Unlike in the trajectory, the edges could dissappear from the tree between iterations.
+
+            highlighted_path (Sequence[Sequence[int] | None] | None): hightlighted path in the tree.
+            If highlighted path is present, it is a list of edges in the tree. Otherwise, it is None.
+            Defaults to None, meaning no path highlighted.
+
+            filename (str, optional): name of the file where to save the result of visualization.
+            Defaults to "", meaning no visualization.
         """
         fig, ax = plt.subplots()
         ax.set_aspect("equal", "box")
@@ -123,36 +154,55 @@ class PlaneTask(BaseEnv):
                 ax.add_patch(Circle((x0, y0), r, color="k", alpha=0.4))
                 ax.add_patch(Circle((x1, y1), r, color="k", alpha=0.4))
 
-        T = len(traj)
-        N = len(trees)
-        # one line per tree
-        tree_lines = [ax.plot([], [], color="gray", lw=1)[0] for _ in range(N)]
+        T = len(tree_nodes)
+        traj = np.linspace(start, goal, T)
+
+        tree_line = ax.plot([], [], "ro", color="gray", lw=1)[0]
+        edge_lines: list = []
+        highlight_lines: list = []
         (traj_line,) = ax.plot([], [], color="blue", lw=2)
         (traj_point,) = ax.plot([], [], "ro", ms=5)
 
         def init():
-            for ln in tree_lines:
-                ln.set_data([], [])
+            tree_line.set_data([], [])
+            for ln in edge_lines + highlight_lines:
+                ln.remove()
+            edge_lines.clear()
+            highlight_lines.clear()
             traj_line.set_data([], [])
             traj_point.set_data([], [])
-            return tree_lines + [traj_line, traj_point]
+            return [tree_line, traj_line, traj_point]
 
         def update(i):
-            for j, tr in enumerate(trees):
-                pts = tr[i]
-                tree_lines[j].set_data(pts[:, 0], pts[:, 1])
+            # build prefix of nodes
+            nodes_i = np.vstack(tree_nodes[: i + 1])
+            tree_line.set_data(nodes_i[:, 0], nodes_i[:, 1])
+
+            # clear old edges/highlights
+            for ln in edge_lines + highlight_lines:
+                ln.remove()
+            edge_lines.clear()
+            highlight_lines.clear()
+
+            # draw edges
+            for u, v in tree_edges[i]:
+                segment = nodes_i[[u, v], :]
+                ln = ax.plot(segment[:, 0], segment[:, 1], color="gray", lw=1)[0]
+                edge_lines.append(ln)
+            # optional highlight
+            if highlighted_path and highlighted_path[i]:
+                for u, v in highlighted_path[i]:
+                    segment = nodes_i[[u, v], :]
+                    hl = ax.plot(segment[:, 0], segment[:, 1], color="red", lw=2)[0]
+                    highlight_lines.append(hl)
+
+            # update trajectory
             traj_line.set_data(traj[: i + 1, 0], traj[: i + 1, 1])
             traj_point.set_data([traj[i, 0]], [traj[i, 1]])
-            return tree_lines + [traj_line, traj_point]
 
-        anim = FuncAnimation(
-            fig,
-            update,
-            frames=T,
-            init_func=init,
-            blit=True,
-            interval=100,
-        )
+            return [tree_line, traj_line, traj_point] + edge_lines + highlight_lines
+
+        anim = FuncAnimation(fig, update, frames=T, init_func=init, blit=True, interval=100)
         if filename:
             anim.save(filename, fps=30, extra_args=["-vcodec", "libx264"])
         else:

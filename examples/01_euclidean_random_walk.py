@@ -23,10 +23,9 @@ print(f"Distance: {env.distance(start, goal):.3f}")
 # 5) straight trajectory
 T = 60
 traj = np.linspace(start, goal, T)
-# 6) build N independent growing trees
-N = 3
-trees = []
-for _ in range(N):
-    trees.append([np.vstack([env.draw_random_state() for _ in range(i + 1)]) for i in range(T)])
-# 7) visualize all trees
-env.visualize(traj, trees)
+# 6) build one growing tree
+
+tree_nodes = [[env.draw_random_state()] for i in range(T)]
+tree_edges = [[(0, i)] for i in range(T)]
+# 7) visualize single tree
+env.visualize(start, goal, tree_nodes, tree_edges)

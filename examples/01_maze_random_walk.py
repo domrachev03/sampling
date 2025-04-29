@@ -26,15 +26,15 @@ start = env.draw_random_state()
 goal = env.draw_random_state()
 print(f"Start: {start}, valid? {env.is_state_valid(start)}")
 print(f" Goal: {goal}, valid? {env.is_state_valid(goal)}")
-print(f"Distance start→goal: {env.distance(start, goal):.3f}")
+print(f"Distance start -> goal: {env.distance(start, goal):.3f}")
 
 # 5) build trajectory
 T = 50
 traj = np.linspace(start, goal, T)
-# 6) build N growing trees
-N = 1
-trees = []
-for _ in range(N):
-    trees.append([np.vstack([env.draw_random_state() for _ in range(i + 1)]) for i in range(T)])
-# 7) visualize
-env.visualize(traj, trees)
+
+# 6) build one growing tree
+tree_nodes = [[env.draw_random_state()] for _ in range(T)]
+tree_edges = [[(0, i)] for i in range(T)]
+
+# 7) visualize single tree
+env.visualize(start, goal, tree_nodes, tree_edges)
