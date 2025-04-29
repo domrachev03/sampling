@@ -195,59 +195,56 @@ class EuclideanEnv(BaseEnv):
                 Zs2 = b[2] + r * np.cos(vs)
                 ax.plot_surface(Xs2, Ys2, Zs2, color="k", alpha=0.3)
 
-        # now single tree
         T = len(tree_nodes)
-        traj = np.linspace(start, goal, T)
-
-        tree_line = ax.plot([], [], [], "o", color="gray", lw=1)[0]
+        # create empty scatter instead of line
+        tree_scatter = ax.scatter([], [], [], color="gray", s=10)
         edge_lines: list = []
         highlight_lines: list = []
-        (traj_line,) = ax.plot([], [], [], "b-", lw=2)
-        (traj_point,) = ax.plot([], [], [], "ro")
+        # static start/end markers
+        ax.scatter(start[0], start[1], start[2], marker="*", color="green", s=100)
+        ax.scatter(goal[0], goal[1], goal[2], marker="X", color="red", s=100)
 
         def init():
-            tree_line.set_data([], [])
-            tree_line.set_3d_properties([])
+            tree_scatter._offsets3d = ([], [], [])
             for ln in edge_lines + highlight_lines:
                 ln.remove()
             edge_lines.clear()
             highlight_lines.clear()
-            traj_line.set_data([], [])
-            traj_line.set_3d_properties([])
-            traj_point.set_data([], [])
-            traj_point.set_3d_properties([])
-            return [tree_line, traj_line, traj_point]
+            # include lines so blit can draw them from frame 0
+            return [tree_scatter] + edge_lines + highlight_lines
 
         def update(i):
-            # concatenate all nodes up to i
+            # gather all nodes up to iteration i
             nodes_i = np.vstack(tree_nodes[: i + 1])
-            tree_line.set_data(nodes_i[:, 0], nodes_i[:, 1])
-            tree_line.set_3d_properties(nodes_i[:, 2])
+            xs, ys, zs = nodes_i[:, 0], nodes_i[:, 1], nodes_i[:, 2]
+            tree_scatter._offsets3d = (xs, ys, zs)
 
-            # clear old edges
+            # clear old artists
             for ln in edge_lines + highlight_lines:
                 ln.remove()
             edge_lines.clear()
             highlight_lines.clear()
 
-            # draw all edges at iteration i
-            for u, v in tree_edges[i]:
-                segment = nodes_i[[u, v], :]
-                ln = ax.plot(segment[:, 0], segment[:, 1], segment[:, 2], color="gray", lw=1)[0]
+            # draw all tree edges up to i
+            all_edges = [e for edges in tree_edges[: i + 1] for e in edges]
+            for u, v in all_edges:
+                seg = nodes_i[[u, v]]
+                ln = ax.plot(seg[:, 0], seg[:, 1], seg[:, 2], color="gray", lw=1)[0]
                 edge_lines.append(ln)
-            # optional highlight
-            if highlighted_path is not None and highlighted_path[i] is not None:
-                for u, v in highlighted_path[i]:
-                    segment = nodes_i[[u, v], :]
-                    hl = ax.plot(segment[:, 0], segment[:, 1], segment[:, 2], color="red", lw=2)[0]
-                    highlight_lines.append(hl)
-            # update traj
-            traj_line.set_data(traj[: i + 1, 0], traj[: i + 1, 1])
-            traj_line.set_3d_properties(traj[: i + 1, 2])
-            traj_point.set_data([traj[i, 0]], [traj[i, 1]])
-            traj_point.set_3d_properties([traj[i, 2]])
 
-            return [tree_line, traj_line, traj_point] + edge_lines + highlight_lines
+            # draw all highlighted edges up to i
+            if highlighted_path is not None:
+                all_hl = []
+                for hp in highlighted_path[: i + 1]:
+                    if hp is not None:
+                        all_hl.extend(hp)
+                for u, v in all_hl:
+                    seg = nodes_i[[u, v]]
+                    hl = ax.plot(seg[:, 0], seg[:, 1], seg[:, 2], color="red", lw=2)[0]
+                    highlight_lines.append(hl)
+
+            # return all artists so blit updates every frame
+            return [tree_scatter] + edge_lines + highlight_lines
 
         anim = FuncAnimation(fig, update, frames=T, init_func=init, blit=False, interval=100)
         if filename:

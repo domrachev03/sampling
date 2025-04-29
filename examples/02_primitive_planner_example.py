@@ -30,18 +30,21 @@ def run_2d():
 
 
 def run_3d():
-    x_lim, y_lim, z_lim = (0, 10), (0, 8), (0, 5)
-    obs_types = []  # [EuclidObstacleShapes.SPHERE, EuclidObstacleShapes.BOX]
+    x_lim, y_lim, z_lim = (0, 3), (0, 3), (0, 3)
+    obs_types = [EuclidObstacleShapes.SPHERE, EuclidObstacleShapes.BOX]
     obs_data = [
-        # np.array([4, 4, 2, 1]),  # sphere: x,y,z,r
-        # np.array([6, 1, 1, 8, 4, 3]),  # box: x0,y0,z0,x1,y1,z1
+        np.array([2.0, 2.0, 2.0, 0.8]),
+        np.array([0.5, 0.5, 0.5, 1.0, 1.0, 1.0]),
     ]
     env = EuclideanEnv(x_lim, y_lim, z_lim, obs_types, obs_data, min_obstacle_distance=0.1)
 
     start, goal = env.draw_random_state(), env.draw_random_state()
     planner = PrimitiveTreePlanner(start, goal, env, sol_threshold=0.2, extend_state=0.2)
-    while not planner.step():
+    N_iter = 500
+    for _ in range(N_iter):
+        planner.step()
         pass
+    print(f"Found solution: {planner.opt_path} with distance {planner.min_dist:.3f}")
     planner.visualize()
 
 

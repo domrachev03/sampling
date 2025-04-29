@@ -90,8 +90,10 @@ class BaseTreePlanner(ABC):
                 self.min_dist = opt_dist
                 self.opt_path = opt_path
             self.solution_history.append(opt_path)
+            return True
         else:
             self.solution_history.append(None)
+            return False
 
     def visualize(self, filename: str = ""):
         self.env.visualize(
