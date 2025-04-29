@@ -5,6 +5,9 @@ import numpy as np
 
 
 class BaseEnv(ABC):
+    def __init__(self, dim: int):
+        self.dim = dim
+
     @abstractmethod
     def is_state_valid(self, state: np.ndarray) -> bool:
         pass

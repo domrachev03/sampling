@@ -25,6 +25,7 @@ class EuclideanEnv(BaseEnv):
         obstacles_data: list[np.ndarray],
         min_obstacle_distance: float = 0.0,
     ):
+        super().__init__(3)
         self.x_lim = x_lim
         self.y_lim = y_lim
         self.z_lim = z_lim
