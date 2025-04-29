@@ -60,16 +60,3 @@ class PrimitiveTreePlanner(BaseTreePlanner):
 
         # Step 6. Check if the new state is a solution
         return self.check_solution(new_nodes)
-
-    def extend(self, s1: np.ndarray, s2: np.ndarray) -> np.ndarray:
-        interpolated_states = []
-        for alpha in np.arange(0, 1 + 1e-6, self.extend_step):
-            # Interpolate between s1 and s2 until the first invalid state
-            interpolated_state = (1 - alpha) * s1 + alpha * s2
-            if self.env.is_state_valid(interpolated_state):
-                interpolated_states.append(interpolated_state)
-            else:
-                break
-
-        # Dropping the first state, as it is already in the tree
-        return np.array(interpolated_states[1:])

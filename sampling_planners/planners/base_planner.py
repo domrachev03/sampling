@@ -46,10 +46,6 @@ class BaseTreePlanner(ABC):
     def step(self) -> bool:
         self.n_steps += 1
 
-    @abstractmethod
-    def extend(self, state: np.ndarray) -> np.ndarray:
-        pass
-
     def sample_state(self) -> np.ndarray:
         return self.env.draw_random_state()
 
@@ -109,6 +105,10 @@ class BaseTreePlanner(ABC):
         distances = np.linalg.norm(self.tree_nodes - state, axis=1)
         return np.argmin(distances)
 
+    def find_near(self, state: np.ndarray, radius: float) -> np.ndarray:
+        distances = np.linalg.norm(self.tree_nodes - state, axis=1)
+        return np.argwhere(distances < radius).ravel()
+
     def djikstra(self, node1: int, node2: Sequence[int] | int) -> tuple[np.ndarray, list[np.ndarray]]:
         """Depth-first search to find the smallest path between one node and a set of other nodes.
 
@@ -166,3 +166,20 @@ class BaseTreePlanner(ABC):
             else:
                 paths.append(np.array(list(zip(seq[:-1], seq[1:])), dtype=int))
         return costs, paths
+
+    def extend(self, s1: np.ndarray, s2: np.ndarray) -> np.ndarray:
+        # move from s1 toward s2 in fixed‐length steps
+        direction = s2 - s1
+        dist = np.linalg.norm(direction)
+        if dist == 0 or self.extend_step <= 0:
+            return np.empty((0, s1.shape[0]))
+        unit_dir = direction / dist
+        new_states = []
+        n_steps = int(dist / self.extend_step)
+        for i in range(1, n_steps + 1):
+            step_dist = min(i * self.extend_step, dist)
+            state = s1 + unit_dir * step_dist
+            if not self.env.is_state_valid(state):
+                break
+            new_states.append(state)
+        return np.array(new_states)
