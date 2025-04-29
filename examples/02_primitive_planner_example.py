@@ -9,7 +9,7 @@ from sampling_planners.envs.plane_env import PlaneObstacleShapes, PlaneEnv
 from sampling_planners.planners.primitive_planner import PrimitiveTreePlanner
 
 
-def run_2d():
+def run_2d(choose_nearest: bool = False):
     x_lim, y_lim = (0, 10), (0, 5)
     obs_types = [PlaneObstacleShapes.CIRCLE, PlaneObstacleShapes.BOX]
     obs_data = [
@@ -19,7 +19,15 @@ def run_2d():
     env = PlaneEnv(x_lim, y_lim, obs_types, obs_data, min_obstacle_distance=0.1)
 
     start, goal = env.draw_random_state(), env.draw_random_state()
-    planner = PrimitiveTreePlanner(start, goal, env, sol_threshold=0.2, extend_state=0.05)
+    print(choose_nearest)
+    planner = PrimitiveTreePlanner(
+        start,
+        goal,
+        env,
+        sol_threshold=0.2,
+        extend_state=0.05,
+        choose_nearest=choose_nearest,
+    )
     N_iter = 100
     for _ in range(N_iter):
         planner.step()
@@ -29,17 +37,32 @@ def run_2d():
     planner.visualize()
 
 
-def run_3d():
+def run_3d(choose_nearest: bool = False):
     x_lim, y_lim, z_lim = (0, 3), (0, 3), (0, 3)
     obs_types = [EuclidObstacleShapes.SPHERE, EuclidObstacleShapes.BOX]
     obs_data = [
         np.array([2.0, 2.0, 2.0, 0.8]),
         np.array([0.5, 0.5, 0.5, 1.0, 1.0, 1.0]),
     ]
-    env = EuclideanEnv(x_lim, y_lim, z_lim, obs_types, obs_data, min_obstacle_distance=0.1)
+    env = EuclideanEnv(
+        x_lim,
+        y_lim,
+        z_lim,
+        obs_types,
+        obs_data,
+        min_obstacle_distance=0.1,
+    )
 
     start, goal = env.draw_random_state(), env.draw_random_state()
-    planner = PrimitiveTreePlanner(start, goal, env, sol_threshold=0.2, extend_state=0.2)
+    print(choose_nearest)
+    planner = PrimitiveTreePlanner(
+        start,
+        goal,
+        env,
+        sol_threshold=0.2,
+        extend_step=0.2,
+        choose_nearest=choose_nearest,
+    )
     N_iter = 500
     for _ in range(N_iter):
         planner.step()
@@ -51,9 +74,10 @@ def run_3d():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dim", choices=["2d", "3d"], default="3d")
+    parser.add_argument("--choose-nearest", action="store_true", default=True)
     args = parser.parse_args()
 
     if args.dim == "2d":
-        run_2d()
+        run_2d(choose_nearest=args.choose_nearest)
     else:
-        run_3d()
+        run_3d(choose_nearest=args.choose_nearest)
