@@ -17,9 +17,6 @@ class RRTPlanner(BaseTreePlanner):
         super().__init__(start, goal, env, sol_threshold, extend_step=extend_step)
         self.p_sample_goal = p_sample_goal
 
-        self.distance_from_start: np.ndarray = np.zeros(1)
-        self.parent_node: np.ndarray = -np.ones(1, dtype=int)
-
     def step_body(self) -> bool:
         # Step 2. Select a new random environment collision-free state
         sample_goal = np.random.rand() < self.p_sample_goal
@@ -68,17 +65,3 @@ class RRTPlanner(BaseTreePlanner):
         )
 
         self.add_edges(new_edges)
-        # Check for solution
-        sol_nodes = [node for node in new_nodes if self.is_solution(node)]
-        if len(sol_nodes) == 0:
-            return
-        closest_sol_node = sol_nodes[np.argmin(self.distance_from_start[sol_nodes])]
-        if self.distance_from_start[closest_sol_node] < self.min_dist:
-            path_to_sol = [closest_sol_node]
-            while self.parent_node[closest_sol_node] != -1:
-                path_to_sol.append(self.parent_node[closest_sol_node])
-                closest_sol_node = self.parent_node[closest_sol_node]
-            path = path_to_sol[::-1]
-            self.opt_path = np.array(list(zip(path[:-1], path[1:])), dtype=int)
-            self.min_dist = self.distance_from_start[closest_sol_node].copy()
-        return

@@ -111,7 +111,7 @@ def run_3d(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dim", choices=["2d", "3d"], default="2d")
+    parser.add_argument("--dim", choices=["2d", "3d"], default="3d")
     parser.add_argument(
         "--planner",
         choices=["primitive", "rrt", "rrt_star"],

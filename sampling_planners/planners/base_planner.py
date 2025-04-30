@@ -35,6 +35,9 @@ class BaseTreePlanner(ABC):
         self.tree_edges_history: list[np.ndarray] = [self.tree_edges.copy()]  # # List of arrays (n_edges, 2)
         self.solution_history: list[np.ndarray | None] = [None]  # List of arrays (n_nodes, env_dim)
 
+        self.distance_from_start: np.ndarray = np.zeros(1)
+        self.parent_node: np.ndarray = -np.ones(1, dtype=int)
+
         self.min_dist = np.inf
         self.opt_path = None
         self.n_steps = 0
@@ -44,6 +47,17 @@ class BaseTreePlanner(ABC):
         n_nodes_last = self.n_nodes
 
         self.step_body()
+        sol_nodes = [node for node in np.arange(self.n_nodes) if self.is_solution(node)]
+        if len(sol_nodes) != 0:
+            closest_sol_node = sol_nodes[np.argmin(self.distance_from_start[sol_nodes])]
+            path_to_sol = [closest_sol_node]
+            while self.parent_node[closest_sol_node] != -1:
+                path_to_sol.append(self.parent_node[closest_sol_node])
+                closest_sol_node = self.parent_node[closest_sol_node]
+            path = path_to_sol[::-1]
+            self.opt_path = np.array(list(zip(path[:-1], path[1:])), dtype=int)
+            self.min_dist = self.distance_from_start[closest_sol_node].copy()
+
         sol_found = self.min_dist != np.inf
 
         if sol_found:

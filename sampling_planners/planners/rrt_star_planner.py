@@ -23,8 +23,6 @@ class RrtStarPlanner(BaseTreePlanner):
         self.use_global_cost = use_global_cost
         self.skip_extend_in_choose_parent = skip_extend_in_choose_parent
 
-        self.distance_from_start: np.ndarray = np.zeros(1)
-        self.parent_node: np.ndarray = -np.ones(1, dtype=int)
         self.iter_count = 0
 
     def step_body(self) -> bool:
@@ -40,19 +38,6 @@ class RrtStarPlanner(BaseTreePlanner):
 
         self.add_edges([(closest_parent_node, new_node)])
         self.rewire(new_node, nodes_near, closest_parent_node)
-
-        sol_nodes = [node for node in np.arange(self.n_nodes) if self.is_solution(node)]
-        if len(sol_nodes) == 0:
-            return
-        closest_sol_node = sol_nodes[np.argmin(self.distance_from_start[sol_nodes])]
-        path_to_sol = [closest_sol_node]
-        while self.parent_node[closest_sol_node] != -1:
-            path_to_sol.append(self.parent_node[closest_sol_node])
-            closest_sol_node = self.parent_node[closest_sol_node]
-        path = path_to_sol[::-1]
-        self.opt_path = np.array(list(zip(path[:-1], path[1:])), dtype=int)
-        self.min_dist = self.distance_from_start[closest_sol_node].copy()
-        return
 
     def near(self, new_state: np.ndarray) -> np.ndarray:
         r = self.sigma * (np.log(self.n_nodes) / self.n_nodes) ** (1 / self.env.dim) if self.n_nodes > 1 else np.inf
