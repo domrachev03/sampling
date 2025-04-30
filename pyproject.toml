@@ -6,7 +6,7 @@ authors = [{ name = "Ivan Domrachev", email = "i.domrachev@kaist.ac.kr" }]
 readme = "README.md"
 requires-python = ">=3.10"
 
-dependencies = ["jax>=0.4"]
+dependencies = ["matplotlib"]
 
 [project.optional-dependencies]
 dev = ["pre-commit", "ruff", "pytest", "robot_descriptions>=1.12"]
