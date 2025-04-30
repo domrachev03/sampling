@@ -9,7 +9,9 @@ from sampling_planners.planners.rrt_planner import RRTPlanner
 from sampling_planners.planners.rrt_star_planner import RrtStarPlanner
 
 
-def run_2d(choose_nearest: bool = False, planner_type: str = "primitive", sigma: float = 1.0):
+def run_2d(
+    choose_nearest: bool = False, planner_type: str = "primitive", sigma: float = 1.0, p_sample_goal: float = 0.0
+):
     x_lim, y_lim = (0, 10), (0, 5)
     obs_types = []  # [PlaneObstacleShapes.CIRCLE, PlaneObstacleShapes.BOX]
     obs_data = [
@@ -19,7 +21,6 @@ def run_2d(choose_nearest: bool = False, planner_type: str = "primitive", sigma:
     env = PlaneEnv(x_lim, y_lim, obs_types, obs_data, min_obstacle_distance=0.1)
 
     start, goal = env.draw_random_state(), env.draw_random_state()
-    print(choose_nearest)
 
     # select planner
     if planner_type == "primitive":
@@ -27,7 +28,7 @@ def run_2d(choose_nearest: bool = False, planner_type: str = "primitive", sigma:
             start, goal, env, sol_threshold=0.2, extend_step=0.2, choose_nearest=choose_nearest
         )
     elif planner_type == "rrt":
-        planner = RRTPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.2)
+        planner = RRTPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.2, p_sample_goal=p_sample_goal)
     else:  # rrt_star
         planner = RrtStarPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.2, sigma=sigma)
 
@@ -36,11 +37,14 @@ def run_2d(choose_nearest: bool = False, planner_type: str = "primitive", sigma:
         planner.step()
         # while not planner.step():
         pass
+    print([a is None for a in planner.solution_history])
     print(f"Found solution: {planner.opt_path} with distance {planner.min_dist:.3f}")
     planner.visualize()
 
 
-def run_3d(choose_nearest: bool = False, planner_type: str = "primitive", sigma: float = 1.0):
+def run_3d(
+    choose_nearest: bool = False, planner_type: str = "primitive", sigma: float = 1.0, p_sample_goal: float = 0.0
+):
     x_lim, y_lim, z_lim = (0, 3), (0, 3), (0, 3)
     obs_types = []  # [EuclidObstacleShapes.SPHERE, EuclidObstacleShapes.BOX]
     obs_data = [
@@ -65,7 +69,7 @@ def run_3d(choose_nearest: bool = False, planner_type: str = "primitive", sigma:
             start, goal, env, sol_threshold=0.2, extend_step=0.1, choose_nearest=choose_nearest
         )
     elif planner_type == "rrt":
-        planner = RRTPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.1)
+        planner = RRTPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.1, p_sample_goal=p_sample_goal)
     else:
         planner = RrtStarPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.1, sigma=sigma)
 
@@ -83,7 +87,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--planner",
         choices=["primitive", "rrt", "rrt_star"],
-        default="rrt_star",
+        default="rrt",
         help="Which planner to run",
     )
     parser.add_argument("--choose-nearest", action="store_true", default=True)
@@ -93,6 +97,7 @@ if __name__ == "__main__":
         default=5.0,
         help="Rewiring radius sigma for RRT*",
     )
+    parser.add_argument("--p-sample-goal", type=float, default=0.1, help="Probability of sampling the goal in RRT")
     args = parser.parse_args()
 
     if args.dim == "2d":
@@ -100,10 +105,12 @@ if __name__ == "__main__":
             choose_nearest=args.choose_nearest,
             planner_type=args.planner,
             sigma=args.sigma,
+            p_sample_goal=args.p_sample_goal,
         )
     else:
         run_3d(
             choose_nearest=args.choose_nearest,
             planner_type=args.planner,
             sigma=args.sigma,
+            p_sample_goal=args.p_sample_goal,
         )

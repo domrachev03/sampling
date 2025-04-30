@@ -12,33 +12,36 @@ class RRTPlanner(BaseTreePlanner):
         env: BaseEnv,
         sol_threshold: float = 1e-3,
         extend_step: float = 0.1,
+        p_sample_goal: float = 0.0,
     ):
         super().__init__(start, goal, env, sol_threshold, extend_step=extend_step)
+        self.p_sample_goal = p_sample_goal
 
-    def step(self) -> bool:
-        super().step()
+        self.distance_from_start: np.ndarray = np.zeros(1)
+        self.parent_node: np.ndarray = -np.ones(1, dtype=int)
 
+    def step_body(self) -> bool:
         # Step 2. Select a new random environment collision-free state
-        new_state = self.sample_state()
+        sample_goal = np.random.rand() < self.p_sample_goal
+        new_state = self.sample_state() if not sample_goal else self.goal
         # Step 3. Choose the nearest node in the tree
         init_node = self.nearest_node(new_state)
-        random_state = self.tree_nodes[init_node]
+        init_state = self.tree_nodes[init_node]
 
         # Step 4. Extend the tree towards the new state
-        extended_state = self.extend(random_state, new_state)
+        extended_state = self.extend(init_state, new_state)
 
         # Step 5. Update the tree with the new state and edges
-        if len(extended_state) == 0:
-            return False
         match len(extended_state):
             case 0:
                 # No new nodes added
-                return False
+                return self.min_dist != np.inf
 
             case 1:
                 # One new node added
                 new_nodes = self.add_nodes(extended_state)
                 new_edges = np.array([(init_node, new_nodes[0])])
+                self.parent_node = np.concatenate([self.parent_node, [init_node]])
 
             case _:
                 new_nodes = self.add_nodes(extended_state)
@@ -48,8 +51,34 @@ class RRTPlanner(BaseTreePlanner):
                         [(i, i + 1) for i in new_nodes[:-1]],
                     ]
                 )
-                # Multiple new nodes added
-        self.add_edges(new_edges)
+                self.parent_node = np.concatenate(
+                    [
+                        self.parent_node,
+                        [init_node] + [new_nodes[i - 1] for i in range(1, len(new_nodes))],
+                    ]
+                )
+        self.distance_from_start = np.concatenate(
+            [
+                self.distance_from_start,
+                [
+                    self.distance_from_start[init_node] + self.env.distance(ext_state, init_state)
+                    for ext_state in extended_state
+                ],
+            ]
+        )
 
-        # Step 6. Check if the new state is a solution
-        return self.check_solution(new_nodes)
+        self.add_edges(new_edges)
+        # Check for solution
+        sol_nodes = [node for node in new_nodes if self.is_solution(node)]
+        if len(sol_nodes) == 0:
+            return self.min_dist != np.inf
+        closest_sol_node = sol_nodes[np.argmin(self.distance_from_start[sol_nodes])]
+        if self.distance_from_start[closest_sol_node] < self.min_dist:
+            path_to_sol = [closest_sol_node]
+            while self.parent_node[closest_sol_node] != -1:
+                path_to_sol.append(self.parent_node[closest_sol_node])
+                closest_sol_node = self.parent_node[closest_sol_node]
+            path = path_to_sol[::-1]
+            self.opt_path = np.array(list(zip(path[:-1], path[1:])), dtype=int)
+            self.min_dist = self.distance_from_start[closest_sol_node].copy()
+        return True
