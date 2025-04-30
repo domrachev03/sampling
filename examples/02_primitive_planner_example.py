@@ -3,8 +3,7 @@ import argparse
 import numpy as np
 
 from sampling_planners.envs.euclidean_env import EuclideanEnv, EuclidObstacleShapes
-
-from sampling_planners.envs.plane_env import PlaneObstacleShapes, PlaneEnv
+from sampling_planners.envs.plane_env import PlaneEnv, PlaneObstacleShapes
 from sampling_planners.planners.primitive_planner import PrimitiveTreePlanner
 from sampling_planners.planners.rrt_planner import RRTPlanner
 from sampling_planners.planners.rrt_star_planner import RrtStarPlanner
@@ -12,10 +11,10 @@ from sampling_planners.planners.rrt_star_planner import RrtStarPlanner
 
 def run_2d(choose_nearest: bool = False, planner_type: str = "primitive", sigma: float = 1.0):
     x_lim, y_lim = (0, 10), (0, 5)
-    obs_types = [PlaneObstacleShapes.CIRCLE, PlaneObstacleShapes.BOX]
+    obs_types = []  # [PlaneObstacleShapes.CIRCLE, PlaneObstacleShapes.BOX]
     obs_data = [
-        np.array([3.0, 2.5, 1.0]),  # circle: x,y,r
-        np.array([6.0, 1.0, 8.0, 3.0]),  # box: x0,y0,x1,y1
+        # np.array([3.0, 2.5, 1.0]),  # circle: x,y,r
+        # np.array([6.0, 1.0, 8.0, 3.0]),  # box: x0,y0,x1,y1
     ]
     env = PlaneEnv(x_lim, y_lim, obs_types, obs_data, min_obstacle_distance=0.1)
 
@@ -43,10 +42,10 @@ def run_2d(choose_nearest: bool = False, planner_type: str = "primitive", sigma:
 
 def run_3d(choose_nearest: bool = False, planner_type: str = "primitive", sigma: float = 1.0):
     x_lim, y_lim, z_lim = (0, 3), (0, 3), (0, 3)
-    obs_types = [EuclidObstacleShapes.SPHERE, EuclidObstacleShapes.BOX]
+    obs_types = []  # [EuclidObstacleShapes.SPHERE, EuclidObstacleShapes.BOX]
     obs_data = [
-        np.array([2.0, 2.0, 2.0, 0.8]),
-        np.array([0.5, 0.5, 0.5, 1.0, 1.0, 1.0]),
+        # np.array([2.0, 2.0, 2.0, 0.8]),
+        # np.array([0.5, 0.5, 0.5, 1.0, 1.0, 1.0]),
     ]
     env = EuclideanEnv(
         x_lim,
@@ -91,8 +90,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--sigma",
         type=float,
-        default=1.0,
-        help="Rewiring radius σ for RRT*",
+        default=5.0,
+        help="Rewiring radius sigma for RRT*",
     )
     args = parser.parse_args()
 

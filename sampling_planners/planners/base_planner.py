@@ -61,12 +61,12 @@ class BaseTreePlanner(ABC):
         # extend adjacency list with empty neighbors
         for _ in new_nodes:
             self.adj.append([])
+        self.distance_from_start = np.concatenate((self.distance_from_start, np.full(len(new_states), np.inf)))
 
         return new_nodes
 
     def add_edges(self, new_edges: np.ndarray) -> None:
         self.tree_edges = np.vstack((self.tree_edges, new_edges))
-        self.tree_edges_history.append(new_edges.copy())
 
         # update adjacency incrementally
         for u, v in new_edges.tolist():
@@ -82,15 +82,15 @@ class BaseTreePlanner(ABC):
 
         # remove edges from tree
         self.tree_edges = np.array([edge for edge in self.tree_edges if edge not in edges.tolist()])
-        self.tree_edges_history.append(self.tree_edges.copy())
 
     def is_solution(self, node: int) -> bool:
         state = self.tree_nodes[node]
         return self.env.distance(state, self.goal) < self.sol_threshold
 
     def check_solution(self, nodes: np.ndarray | None = None) -> bool:
-        nodes = nodes if nodes is None else np.arange(self.n_nodes)
+        nodes = nodes if nodes is not None else np.arange(self.n_nodes)
         sol_nodes = [node for node in nodes if self.is_solution(node)]
+        self.tree_edges_history.append(self.tree_edges.copy())
 
         self.distance_from_start, paths = self.djikstra(0)
         self.parent_node = np.array([0] + [path[0, 1] for path in paths[1:]])
@@ -138,7 +138,7 @@ class BaseTreePlanner(ABC):
             node2 (Sequence[int] | int): target nodes
 
         Returns:
-            tuple[np.ndarray, list[np.ndarray]]: costs for each target and list of edge‐arrays
+            tuple[np.ndarray, list[np.ndarray]]: costs for each target and list of edge-arrays
         """
         # normalize targets
         if node2 is None:
