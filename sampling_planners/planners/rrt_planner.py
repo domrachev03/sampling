@@ -35,7 +35,7 @@ class RRTPlanner(BaseTreePlanner):
         match len(extended_state):
             case 0:
                 # No new nodes added
-                return self.min_dist != np.inf
+                return
 
             case 1:
                 # One new node added
@@ -71,7 +71,7 @@ class RRTPlanner(BaseTreePlanner):
         # Check for solution
         sol_nodes = [node for node in new_nodes if self.is_solution(node)]
         if len(sol_nodes) == 0:
-            return self.min_dist != np.inf
+            return
         closest_sol_node = sol_nodes[np.argmin(self.distance_from_start[sol_nodes])]
         if self.distance_from_start[closest_sol_node] < self.min_dist:
             path_to_sol = [closest_sol_node]
@@ -81,4 +81,4 @@ class RRTPlanner(BaseTreePlanner):
             path = path_to_sol[::-1]
             self.opt_path = np.array(list(zip(path[:-1], path[1:])), dtype=int)
             self.min_dist = self.distance_from_start[closest_sol_node].copy()
-        return True
+        return

@@ -33,7 +33,7 @@ class RrtStarPlanner(BaseTreePlanner):
         nodes_near = self.near(x_rand)
         closest_parent_node, sigma_min = self.choose_parent(nodes_near, x_rand)
         if closest_parent_node == -1 or not self.check_collision_free(self.tree_nodes[closest_parent_node], x_rand):
-            return self.min_dist != np.inf
+            return
         new_node = self.add_nodes([x_rand]).item()
         self.distance_from_start = np.concatenate([self.distance_from_start, [sigma_min]])
         self.parent_node = np.concatenate([self.parent_node, [closest_parent_node]])
@@ -43,7 +43,7 @@ class RrtStarPlanner(BaseTreePlanner):
 
         sol_nodes = [node for node in np.arange(self.n_nodes) if self.is_solution(node)]
         if len(sol_nodes) == 0:
-            return False
+            return
         closest_sol_node = sol_nodes[np.argmin(self.distance_from_start[sol_nodes])]
         path_to_sol = [closest_sol_node]
         while self.parent_node[closest_sol_node] != -1:
@@ -52,7 +52,7 @@ class RrtStarPlanner(BaseTreePlanner):
         path = path_to_sol[::-1]
         self.opt_path = np.array(list(zip(path[:-1], path[1:])), dtype=int)
         self.min_dist = self.distance_from_start[closest_sol_node].copy()
-        return True
+        return
 
     def near(self, new_state: np.ndarray) -> np.ndarray:
         r = self.sigma * (np.log(self.n_nodes) / self.n_nodes) ** (1 / self.env.dim) if self.n_nodes > 1 else np.inf

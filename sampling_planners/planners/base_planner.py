@@ -43,7 +43,9 @@ class BaseTreePlanner(ABC):
         self.n_steps += 1
         n_nodes_last = self.n_nodes
 
-        sol_found = self.step_body()
+        self.step_body()
+        sol_found = self.min_dist != np.inf
+
         if sol_found:
             self.solution_history.append(self.opt_path.copy())
         else:
@@ -55,7 +57,7 @@ class BaseTreePlanner(ABC):
         return sol_found
 
     @abstractmethod
-    def step_body(self) -> bool:
+    def step_body(self):
         pass
 
     def sample_state(self) -> np.ndarray:
