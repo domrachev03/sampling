@@ -10,7 +10,12 @@ from sampling_planners.planners.rrt_star_planner import RrtStarPlanner
 
 
 def run_2d(
-    choose_nearest: bool = False, planner_type: str = "primitive", sigma: float = 1.0, p_sample_goal: float = 0.0
+    choose_nearest: bool = False,
+    planner_type: str = "primitive",
+    sigma: float = 1.0,
+    p_sample_goal: float = 0.0,
+    use_global_cost: bool = False,
+    skip_extend_in_choose_parent: bool = False,
 ):
     x_lim, y_lim = (0, 10), (0, 5)
     obs_types = [PlaneObstacleShapes.CIRCLE, PlaneObstacleShapes.BOX]
@@ -31,7 +36,15 @@ def run_2d(
         planner = RRTPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.2, p_sample_goal=p_sample_goal)
     else:  # rrt_star
         planner = RrtStarPlanner(
-            start, goal, env, sol_threshold=0.2, extend_step=0.2, sigma=sigma, p_sample_goal=p_sample_goal
+            start,
+            goal,
+            env,
+            sol_threshold=0.2,
+            extend_step=0.2,
+            sigma=sigma,
+            p_sample_goal=p_sample_goal,
+            use_global_cost=use_global_cost,
+            skip_extend_in_choose_parent=skip_extend_in_choose_parent,
         )
 
     N_iter = 500
@@ -44,7 +57,12 @@ def run_2d(
 
 
 def run_3d(
-    choose_nearest: bool = False, planner_type: str = "primitive", sigma: float = 1.0, p_sample_goal: float = 0.0
+    choose_nearest: bool = False,
+    planner_type: str = "primitive",
+    sigma: float = 1.0,
+    p_sample_goal: float = 0.0,
+    use_global_cost: bool = False,
+    skip_extend_in_choose_parent: bool = False,
 ):
     x_lim, y_lim, z_lim = (0, 3), (0, 3), (0, 3)
     obs_types = [EuclidObstacleShapes.SPHERE, EuclidObstacleShapes.BOX]
@@ -71,8 +89,17 @@ def run_3d(
         )
     elif planner_type == "rrt":
         planner = RRTPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.1, p_sample_goal=p_sample_goal)
-    else:
-        planner = RrtStarPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.1, sigma=sigma)
+    else:  # rrt_star
+        planner = RrtStarPlanner(
+            start,
+            goal,
+            env,
+            sol_threshold=0.2,
+            extend_step=0.1,
+            sigma=sigma,
+            use_global_cost=use_global_cost,
+            skip_extend_in_choose_parent=skip_extend_in_choose_parent,
+        )
 
     N_iter = 500
     for _ in range(N_iter):
@@ -99,6 +126,18 @@ if __name__ == "__main__":
         help="Rewiring radius sigma for RRT*",
     )
     parser.add_argument("--p-sample-goal", type=float, default=0.1, help="Probability of sampling the goal in RRT")
+    parser.add_argument(
+        "--use-global-cost",
+        action="store_true",
+        default=False,
+        help="Flag to use global cost in RRT*",
+    )
+    parser.add_argument(
+        "--skip-extend-in-choose-parent",
+        action="store_true",
+        default=True,
+        help="Flag to skip extension in choose-parent step for RRT*",
+    )
     args = parser.parse_args()
 
     if args.dim == "2d":
@@ -107,6 +146,8 @@ if __name__ == "__main__":
             planner_type=args.planner,
             sigma=args.sigma,
             p_sample_goal=args.p_sample_goal,
+            use_global_cost=args.use_global_cost,
+            skip_extend_in_choose_parent=args.skip_extend_in_choose_parent,
         )
     else:
         run_3d(
@@ -114,4 +155,6 @@ if __name__ == "__main__":
             planner_type=args.planner,
             sigma=args.sigma,
             p_sample_goal=args.p_sample_goal,
+            use_global_cost=args.use_global_cost,
+            skip_extend_in_choose_parent=args.skip_extend_in_choose_parent,
         )
