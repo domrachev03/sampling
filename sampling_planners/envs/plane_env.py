@@ -180,10 +180,12 @@ class PlaneEnv(BaseEnv):
             nodes_i = np.vstack(tree_nodes[: i + 1])
             tree_scatter.set_offsets(nodes_i)
 
-            # clear old edges/highlights
+            # clear old edges and highlights
+            for ln in edge_lines:
+                ln.remove()
+            edge_lines.clear()
             for ln in highlight_lines:
                 ln.remove()
-            # edge_lines.clear()
             highlight_lines.clear()
 
             # draw edges

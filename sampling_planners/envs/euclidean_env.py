@@ -220,26 +220,24 @@ class EuclideanEnv(BaseEnv):
             xs, ys, zs = nodes_i[:, 0], nodes_i[:, 1], nodes_i[:, 2]
             tree_scatter._offsets3d = (xs, ys, zs)
 
-            # clear old artists
-            for ln in edge_lines + highlight_lines:
+            # clear previous edges
+            for ln in edge_lines:
                 ln.remove()
             edge_lines.clear()
+            # clear previous highlights
+            for ln in highlight_lines:
+                ln.remove()
             highlight_lines.clear()
 
-            # draw all tree edges up to i
-            all_edges = [e for edges in tree_edges[: i + 1] for e in edges]
-            for u, v in all_edges:
+            # draw edges for this iteration only
+            for u, v in tree_edges[i]:
                 seg = nodes_i[[u, v]]
                 ln = ax.plot(seg[:, 0], seg[:, 1], seg[:, 2], color="gray", lw=1)[0]
                 edge_lines.append(ln)
 
-            # draw all highlighted edges up to i
-            if highlighted_path is not None:
-                all_hl = []
-                for hp in highlighted_path[: i + 1]:
-                    if hp is not None:
-                        all_hl.extend(hp)
-                for u, v in all_hl:
+            # optional highlight for this iteration only
+            if highlighted_path is not None and highlighted_path[i] is not None:
+                for u, v in highlighted_path[i]:
                     seg = nodes_i[[u, v]]
                     hl = ax.plot(seg[:, 0], seg[:, 1], seg[:, 2], color="red", lw=2)[0]
                     highlight_lines.append(hl)

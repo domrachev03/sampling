@@ -32,12 +32,11 @@ def run_2d(
     else:  # rrt_star
         planner = RrtStarPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.2, sigma=sigma)
 
-    N_iter = 100
+    N_iter = 500
     for _ in range(N_iter):
         planner.step()
         # while not planner.step():
         pass
-    print([a is None for a in planner.solution_history])
     print(f"Found solution: {planner.opt_path} with distance {planner.min_dist:.3f}")
     planner.visualize()
 
@@ -87,7 +86,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--planner",
         choices=["primitive", "rrt", "rrt_star"],
-        default="rrt",
+        default="rrt_star",
         help="Which planner to run",
     )
     parser.add_argument("--choose-nearest", action="store_true", default=True)

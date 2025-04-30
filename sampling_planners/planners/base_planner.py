@@ -66,12 +66,22 @@ class BaseTreePlanner(ABC):
         self.tree_nodes = np.vstack((self.tree_nodes, new_states))
         return new_nodes
 
-    def add_edges(self, new_edges: np.ndarray) -> None:
+    def add_edges(self, new_edges: Sequence[tuple[int, int]] | np.ndarray) -> None:
+        new_edges = np.array(new_edges, dtype=np.int32)
+        # Sort the edges to ensure nodes are in increasing order
+        new_edges = np.sort(new_edges, axis=1)
         self.tree_edges = np.vstack((self.tree_edges, new_edges))
 
-    def remove_edges(self, edges: np.ndarray) -> None:
-        # remove edges from tree
-        self.tree_edges = np.array([edge for edge in self.tree_edges if edge not in edges.tolist()])
+    def remove_edges(self, edges: Sequence[tuple[int, int]] | np.ndarray) -> None:
+        edges = np.array(edges, dtype=np.int32)
+        # Sort the edges to ensure nodes are in increasing order
+        edges = np.sort(edges, axis=1)
+        # normalize input to a set of tuples for fast lookup
+        edges_to_remove = {tuple(e) for e in edges.tolist()}
+
+        # filter out any edge that appears in edges_to_remove
+        filtered = [edge for edge in self.tree_edges if tuple(edge) not in edges_to_remove]
+        self.tree_edges = np.array(filtered, dtype=self.tree_edges.dtype)
 
     def is_solution(self, node: int) -> bool:
         state = self.tree_nodes[node]
@@ -104,8 +114,11 @@ class BaseTreePlanner(ABC):
         unit_dir = direction / dist
         new_states = []
         n_steps = int(dist / self.extend_step)
-        for i in range(1, n_steps + 1):
-            step_dist = min(i * self.extend_step, dist)
+        step_dist = 0
+        while step_dist < dist:
+            step_dist += self.extend_step
+            if step_dist > dist:
+                step_dist = dist
             state = s1 + unit_dir * step_dist
             if not self.env.is_state_valid(state):
                 break
