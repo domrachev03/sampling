@@ -17,7 +17,7 @@ class RRTPlanner(BaseTreePlanner):
         super().__init__(start, goal, env, sol_threshold, extend_step=extend_step)
         self.p_sample_goal = p_sample_goal
 
-    def step_body(self) -> bool:
+    def step_body(self) -> np.ndarray | None:
         # Step 2. Select a new random environment collision-free state
         sample_goal = np.random.rand() < self.p_sample_goal
         new_state = self.sample_state() if not sample_goal else self.goal
@@ -32,7 +32,7 @@ class RRTPlanner(BaseTreePlanner):
         match len(extended_state):
             case 0:
                 # No new nodes added
-                return
+                return []
 
             case 1:
                 # One new node added
@@ -65,3 +65,5 @@ class RRTPlanner(BaseTreePlanner):
         )
 
         self.add_edges(new_edges)
+
+        return new_nodes

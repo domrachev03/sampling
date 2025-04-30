@@ -25,13 +25,13 @@ class RrtStarPlanner(BaseTreePlanner):
 
         self.iter_count = 0
 
-    def step_body(self) -> bool:
+    def step_body(self) -> np.ndarray | None:
         self.iter_count += 1
         x_rand = self.sample_state() if np.random.rand() > self.p_sample_goal else self.goal
         nodes_near = self.near(x_rand)
         closest_parent_node, sigma_min = self.choose_parent(nodes_near, x_rand)
         if closest_parent_node == -1 or not self.check_collision_free(self.tree_nodes[closest_parent_node], x_rand):
-            return
+            return []
         new_node = self.add_nodes([x_rand]).item()
         self.distance_from_start = np.concatenate([self.distance_from_start, [sigma_min]])
         self.parent_node = np.concatenate([self.parent_node, [closest_parent_node]])

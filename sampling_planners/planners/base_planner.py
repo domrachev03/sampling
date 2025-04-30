@@ -5,6 +5,7 @@ from collections.abc import Sequence
 import numpy as np
 
 from sampling_planners.envs.base_env import BaseEnv
+from time import perf_counter
 
 
 class BaseTreePlanner(ABC):
@@ -46,8 +47,9 @@ class BaseTreePlanner(ABC):
         self.n_steps += 1
         n_nodes_last = self.n_nodes
 
-        self.step_body()
-        sol_nodes = [node for node in np.arange(self.n_nodes) if self.is_solution(node)]
+        candidates = self.step_body()
+        candidates = candidates if candidates is not None else np.arange(self.n_nodes)
+        sol_nodes = [node for node in candidates if self.is_solution(node)]
         if len(sol_nodes) != 0:
             closest_sol_node = sol_nodes[np.argmin(self.distance_from_start[sol_nodes])]
             path_to_sol = [closest_sol_node]
@@ -71,7 +73,7 @@ class BaseTreePlanner(ABC):
         return sol_found
 
     @abstractmethod
-    def step_body(self):
+    def step_body(self) -> np.ndarray | None:
         pass
 
     def sample_state(self) -> np.ndarray:

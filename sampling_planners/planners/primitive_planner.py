@@ -17,7 +17,7 @@ class PrimitiveTreePlanner(BaseTreePlanner):
         super().__init__(start, goal, env, sol_threshold, extend_step=extend_step)
         self.choose_nearest = choose_nearest
 
-    def step_body(self):
+    def step_body(self) -> np.ndarray | None:
         # Step 2. Selecting a random node from the tree
         init_node = None
         if self.choose_nearest:
@@ -37,7 +37,7 @@ class PrimitiveTreePlanner(BaseTreePlanner):
         match len(extended_state):
             case 0:
                 # No new nodes added
-                return
+                return []
 
             case 1:
                 # One new node added
@@ -70,3 +70,5 @@ class PrimitiveTreePlanner(BaseTreePlanner):
         )
 
         self.add_edges(new_edges)
+
+        return new_nodes
