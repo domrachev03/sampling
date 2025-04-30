@@ -44,18 +44,22 @@ class BaseTreePlanner(ABC):
         self.n_steps = 0
 
     def step(self) -> bool:
-        self.n_steps += 1
         n_nodes_last = self.n_nodes
 
         candidates = self.step_body()
+        if self.n_nodes == n_nodes_last:
+            return self.min_dist != np.inf
+        self.n_steps += 1
+
         candidates = candidates if candidates is not None else np.arange(self.n_nodes)
         sol_nodes = [node for node in candidates if self.is_solution(node)]
         if len(sol_nodes) != 0:
             closest_sol_node = sol_nodes[np.argmin(self.distance_from_start[sol_nodes])]
             path_to_sol = [closest_sol_node]
-            while self.parent_node[closest_sol_node] != -1:
-                path_to_sol.append(self.parent_node[closest_sol_node])
-                closest_sol_node = self.parent_node[closest_sol_node]
+            cur_node = closest_sol_node.copy()
+            while self.parent_node[cur_node] != -1:
+                path_to_sol.append(self.parent_node[cur_node])
+                cur_node = self.parent_node[cur_node]
             path = path_to_sol[::-1]
             self.opt_path = np.array(list(zip(path[:-1], path[1:])), dtype=int)
             self.min_dist = self.distance_from_start[closest_sol_node].copy()
@@ -105,14 +109,15 @@ class BaseTreePlanner(ABC):
         state = self.tree_nodes[node]
         return self.env.distance(state, self.goal) < self.sol_threshold
 
-    def visualize(self, filename: str = ""):
-        self.env.visualize(
+    def visualize(self, filename: str = "", show: bool = True):
+        return self.env.visualize(
             self.start,
             self.goal,
             self.tree_nodes_history,
             self.tree_edges_history,
             self.solution_history,
             filename=filename,
+            show=show,
         )
 
     def nearest_node(self, state: np.ndarray) -> int:

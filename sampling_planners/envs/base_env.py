@@ -29,6 +29,7 @@ class BaseEnv(ABC):
         tree_edges: Sequence[Sequence[tuple[int, int]]],
         highlighted_path: Sequence[Sequence[tuple[int, int]] | None] | None = None,
         filename: str = "",
+        show: bool = True,
     ):
         """Visualize the sampling trees and found trajectory, if any.
 

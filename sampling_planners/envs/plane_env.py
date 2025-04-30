@@ -16,7 +16,6 @@ class PlaneObstacleShapes(Enum):
     CAPSULE = 3
 
 
-# class PlaneTask(BaseEnv):
 class PlaneEnv(BaseEnv):
     def __init__(
         self,
@@ -95,6 +94,7 @@ class PlaneEnv(BaseEnv):
         tree_edges: Sequence[Sequence[tuple[int, int]]],
         highlighted_path: Sequence[Sequence[tuple[int, int]] | None] | None = None,
         filename: str = "",
+        show: bool = True,
     ):
         """Visualize the sampling trees and found trajectory, if any.
 
@@ -203,7 +203,9 @@ class PlaneEnv(BaseEnv):
             return [tree_scatter] + edge_lines + highlight_lines
 
         anim = FuncAnimation(fig, update, frames=T, init_func=init, blit=True, interval=100)
-        if filename:
-            anim.save(filename, fps=30, extra_args=["-vcodec", "libx264"])
-        else:
-            plt.show()
+        if show:
+            if filename:
+                anim.save(filename, fps=30)
+            else:
+                plt.show()
+        return anim

@@ -115,7 +115,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--planner",
         choices=["primitive", "rrt", "rrt_star"],
-        default="rrt_star",
+        default="rrt",
         help="Which planner to run",
     )
     parser.add_argument("--choose-nearest", action="store_true", default=True)
