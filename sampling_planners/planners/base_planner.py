@@ -113,7 +113,6 @@ class BaseTreePlanner(ABC):
             return np.empty((0, s1.shape[0]))
         unit_dir = direction / dist
         new_states = []
-        n_steps = int(dist / self.extend_step)
         step_dist = 0
         while step_dist < dist:
             step_dist += self.extend_step

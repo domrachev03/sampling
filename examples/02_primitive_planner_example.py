@@ -13,10 +13,10 @@ def run_2d(
     choose_nearest: bool = False, planner_type: str = "primitive", sigma: float = 1.0, p_sample_goal: float = 0.0
 ):
     x_lim, y_lim = (0, 10), (0, 5)
-    obs_types = []  # [PlaneObstacleShapes.CIRCLE, PlaneObstacleShapes.BOX]
+    obs_types = [PlaneObstacleShapes.CIRCLE, PlaneObstacleShapes.BOX]
     obs_data = [
-        # np.array([3.0, 2.5, 1.0]),  # circle: x,y,r
-        # np.array([6.0, 1.0, 8.0, 3.0]),  # box: x0,y0,x1,y1
+        np.array([3.0, 2.5, 1.0]),  # circle: x,y,r
+        np.array([6.0, 1.0, 8.0, 3.0]),  # box: x0,y0,x1,y1
     ]
     env = PlaneEnv(x_lim, y_lim, obs_types, obs_data, min_obstacle_distance=0.1)
 
@@ -30,7 +30,9 @@ def run_2d(
     elif planner_type == "rrt":
         planner = RRTPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.2, p_sample_goal=p_sample_goal)
     else:  # rrt_star
-        planner = RrtStarPlanner(start, goal, env, sol_threshold=0.2, extend_step=0.2, sigma=sigma)
+        planner = RrtStarPlanner(
+            start, goal, env, sol_threshold=0.2, extend_step=0.2, sigma=sigma, p_sample_goal=p_sample_goal
+        )
 
     N_iter = 500
     for _ in range(N_iter):
@@ -45,10 +47,10 @@ def run_3d(
     choose_nearest: bool = False, planner_type: str = "primitive", sigma: float = 1.0, p_sample_goal: float = 0.0
 ):
     x_lim, y_lim, z_lim = (0, 3), (0, 3), (0, 3)
-    obs_types = []  # [EuclidObstacleShapes.SPHERE, EuclidObstacleShapes.BOX]
+    obs_types = [EuclidObstacleShapes.SPHERE, EuclidObstacleShapes.BOX]
     obs_data = [
-        # np.array([2.0, 2.0, 2.0, 0.8]),
-        # np.array([0.5, 0.5, 0.5, 1.0, 1.0, 1.0]),
+        np.array([2.0, 2.0, 2.0, 0.8]),
+        np.array([0.5, 0.5, 0.5, 1.0, 1.0, 1.0]),
     ]
     env = EuclideanEnv(
         x_lim,
